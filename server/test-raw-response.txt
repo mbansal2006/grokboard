@@ -1,0 +1,40 @@
+```json
+{
+  "title": "Variables in JavaScript",
+  "description": "Learn how to declare and use variables in JavaScript using let, const, and var keywords.",
+  "lessons": [
+    {
+      "id": "lesson-1",
+      "title": "Understanding JavaScript Variables",
+      "content": "# Variables in JavaScript\n\nVariables are containers for storing data values. In JavaScript, you can declare variables using three keywords:\n\n## Variable Declaration Keywords\n\n- **`let`** - Used for variables that can be reassigned. This is the modern way to declare variables that may change.\n- **`const`** - Used for variables that cannot be reassigned. Use this for values that should remain constant.\n- **`var`** - The older way to declare variables (not recommended for modern JavaScript).\n\n## Examples\n\n```javascript\n// Using let - can be reassigned\nlet age = 25;\nage = 26; // This works!\n\n// Using const - cannot be reassigned\nconst name = \"John\";\n// name = \"Jane\"; // This would cause an error!\n```\n\n## Best Practices\n\n- Use `const` by default\n- Use `let` only when you need to reassign the variable\n- Avoid using `var` in modern JavaScript",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "multiple-choice",
+          "question": "Which keyword should you use to declare a variable that will be reassigned later?",
+          "options": ["const", "let", "var", "variable"],
+          "correctAnswer": 1,
+          "explanation": "`let` is the correct choice for variables that can be reassigned. It's the modern way to declare mutable variables in JavaScript."
+        },
+        {
+          "id": "q2",
+          "type": "multiple-choice",
+          "question": "Which keyword should you use for a variable that should never change its value?",
+          "options": ["let", "var", "const", "static"],
+          "correctAnswer": 2,
+          "explanation": "`const` is used for variables that cannot be reassigned. Once you assign a value to a const variable, it cannot be changed."
+        },
+        {
+          "id": "q3",
+          "type": "multiple-choice",
+          "question": "What will happen if you try to reassign a value to a variable declared with `const`?",
+          "options": ["The value will change successfully", "A warning will appear", "An error will occur", "Nothing will happen"],
+          "correctAnswer": 2,
+          "explanation": "Attempting to reassign a `const` variable will cause a TypeError. This is JavaScript's way of preventing you from changing values that should remain constant."
+        }
+      ],
+      "codingExercises": []
+    }
+  ]
+}
+```

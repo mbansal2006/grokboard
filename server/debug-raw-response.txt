@@ -1,0 +1,417 @@
+```json
+{
+  "title": "Fairness Assessment & Task Quality in Software Engineering Benchmarks",
+  "description": "Learn how to assess fairness, create high-quality reproducible tasks, write effective prompts, and review software engineering benchmark tasks. This course covers the principles of SWE-Bench Extended, focusing on creating fair, testable, and implementation-agnostic evaluation tasks for AI systems.",
+  "lessons": [
+    {
+      "id": "lesson-1",
+      "title": "Introduction to Fairness in Testing",
+      "content": "# Introduction to Fairness in Testing\n\nFairness in testing means that the test patch measures **only** what the combined prompt specifies—no hidden expectations, no assumptions about internal code structure, and no enforcement of a single \"correct\" implementation.\n\n## What is a Fair Test?\n\nA fair test ensures that **any valid solution** that meets the defined interface and prompt would pass. The goal is to create tasks that allow skilled engineers or AI models to implement valid fixes without guessing or being constrained by arbitrary details.\n\n## Key Principles\n\n1. **Source of Truth**: Ground all fairness judgments in:\n   - Problem statement, prompt statement, and requirements\n   - Interface (functions, classes, file paths)\n   - Test Patch (how the task verifies expected behavior)\n\n2. **Implementation-Agnostic**: Tests should validate **outcomes**, not **internal implementation details**\n\n3. **Scope Alignment**: Tests should only verify what's described in the issue and interface—nothing more, nothing less\n\n## Why Fairness Matters\n\nUnfair tests can:\n- Reject valid solutions that meet all requirements\n- Force specific algorithms or coding styles\n- Test undocumented behavior\n- Create false negatives in AI evaluation\n\nFair tests ensure we're measuring **behavioral correctness**, not code similarity.",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "multiple-choice",
+          "question": "What are the three key sources of truth for fairness judgments?",
+          "options": [
+            "Problem statement, Interface, and Test Patch",
+            "Code comments, Documentation, and User feedback",
+            "Dockerfile, Requirements, and GitHub issues",
+            "Test cases, Pull requests, and Code reviews"
+          ],
+          "correctAnswer": 0,
+          "explanation": "The three key sources of truth are: (1) Problem statement, prompt statement, and requirements; (2) Interface (functions, classes, file paths); and (3) Test Patch (verification method)."
+        },
+        {
+          "id": "q2",
+          "type": "multiple-choice",
+          "question": "Which of the following is a characteristic of a FAIR test?",
+          "options": [
+            "It checks the exact variable names used in the implementation",
+            "It asserts observable outcomes like return values or HTTP responses",
+            "It requires a specific algorithm to be used",
+            "It verifies the order of internal method calls"
+          ],
+          "correctAnswer": 1,
+          "explanation": "Fair tests assert observable outcomes (return values, HTTP responses, file outputs) rather than internal implementation details like variable names, algorithms, or method call order."
+        },
+        {
+          "id": "q3",
+          "type": "multiple-choice",
+          "question": "What should you do if a valid alternative solution would fail the tests?",
+          "options": [
+            "Approve the test as it ensures quality",
+            "Flag the test as implementation-specific and unfair",
+            "Modify the solution to match the test",
+            "Document the failure as expected behavior"
+          ],
+          "correctAnswer": 1,
+          "explanation": "If a valid alternative solution would fail the tests, the tests are implementation-specific rather than outcome-based, making them unfair. This should be flagged."
+        }
+      ],
+      "codingExercises": []
+    },
+    {
+      "id": "lesson-2",
+      "title": "The Fairness Rubric and Scoring",
+      "content": "# The Fairness Rubric and Scoring\n\n## Applying the Fairness Rubric\n\nWhen evaluating a task for fairness, use this four-level scoring system:\n\n### Score 0 — Well-Scoped\n- Tests align perfectly with issue + interface\n- Outcome-based assertions only\n- Implementation-agnostic\n- Any valid solution following the interface will pass\n\n### Score 1 — Acceptable but Narrow\n- Tests may rely on small internal details\n- Remains mostly fair\n- Minor implementation preferences may be present\n- Most valid solutions will still pass\n\n### Score 2 — Implementation-Specific\n- Tests require certain algorithms or internal structures\n- Valid alternative solutions could fail\n- Overly restrictive on \"how\" rather than \"what\"\n- **Should be flagged for revision**\n\n### Score 3 — Misaligned / Out-of-Scope\n- Tests contradict the requirements\n- Tests extend beyond what's documented\n- Introduces new functionality not in the issue\n- Unfair evaluation that must be corrected\n- **Must be flagged immediately**\n\n## When to Flag Tasks\n\nIf you score a task as **2 or 3**, you must flag it. Tasks with scores of 2-3 fail to provide fair evaluation and need revision.\n\n## Decision-Making Guidance\n\nWhen in doubt between two scores, **err toward the higher number**. It's safer to over-identify potential unfairness than to overlook restrictive tests that could reject valid solutions.",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "multiple-choice",
+          "question": "A test checks that a specific private helper function is called before processing data, but this helper is not mentioned in the interface or issue. What fairness score should this receive?",
+          "options": [
+            "0 - Well-Scoped",
+            "1 - Acceptable but Narrow",
+            "2 - Implementation-Specific",
+            "3 - Misaligned / Out-of-Scope"
+          ],
+          "correctAnswer": 2,
+          "explanation": "This test is implementation-specific (score 2) because it requires a specific internal call sequence not documented in the requirements. Valid alternative implementations that don't use this helper would fail."
+        },
+        {
+          "id": "q2",
+          "type": "multiple-choice",
+          "question": "Tests validate HTTP response codes and JSON structure as described in the API documentation. What score is appropriate?",
+          "options": [
+            "0 - Well-Scoped",
+            "1 - Acceptable but Narrow",
+            "2 - Implementation-Specific",
+            "3 - Misaligned / Out-of-Scope"
+          ],
+          "correctAnswer": 0,
+          "explanation": "Score 0 (Well-Scoped) is correct because the tests validate observable outcomes (HTTP responses, JSON structure) that align with documented API behavior, without constraining internal implementation."
+        },
+        {
+          "id": "q3",
+          "type": "multiple-choice",
+          "question": "What should you do when uncertain between two fairness scores?",
+          "options": [
+            "Always choose the lower score to avoid over-flagging",
+            "Choose the higher score to ensure potential unfairness is identified",
+            "Skip scoring and ask for clarification",
+            "Average the two scores"
+          ],
+          "correctAnswer": 1,
+          "explanation": "When in doubt, err toward the higher number. It's safer to over-identify potential unfairness than to overlook restrictive tests."
+        }
+      ],
+      "codingExercises": []
+    },
+    {
+      "id": "lesson-3",
+      "title": "Verifying Interface Alignment",
+      "content": "# Verifying Interface Alignment\n\n## What is the Interface?\n\nThe **interface** section (when provided) defines:\n- Which functions and classes must exist\n- Their expected inputs and outputs\n- File paths where they should be located\n- Public APIs that tests will validate\n\n## Interface Alignment Checklist\n\nWhen reviewing a task, verify that:\n\n### 1. Tests Reference Only Listed Items\nThe tests should reference **only** the functions, classes, and components listed in the interface. If tests depend on:\n- Unlisted functions\n- Private attributes\n- Data structures not in the interface\n- Helper methods not documented\n\nThen the tests are **out of scope** and should be flagged as **unfair**.\n\n### 2. Names and Signatures Match\nTests must use the **same**:\n- Function names\n- Class names\n- Method signatures\n- File paths\n\nas specified in the interface. Any deviation indicates misalignment.\n\n### 3. Assertions Match Defined I/O\nTest assertions should validate:\n- The **defined inputs** specified in the interface\n- The **expected outputs** documented in the interface\n- Nothing beyond what's explicitly defined\n\n## Example: Aligned vs. Misaligned\n\n### Interface Definition\n```\nFunction: calculate_discount(price: float, percent: int) -> float\nLocation: src/billing.py\nReturns: Discounted price rounded to 2 decimal places\n```\n\n### ✅ Aligned Test\n```python\ndef test_calculate_discount():\n    result = calculate_discount(100.0, 10)\n    assert result == 90.00\n```\n\n### ❌ Misaligned Test\n```python\ndef test_calculate_discount():\n    result = calculate_discount(100.0, 10)\n    assert result == 90.00\n    # This checks internal implementation not in interface\n    assert billing._validate_percent_called == True\n```\n\nThe second test checks an internal detail (_validate_percent_called) that isn't part of the defined interface, making it unfair.",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "multiple-choice",
+          "question": "An interface defines a function `send_email(to: string, subject: string)` in `src/mailer.js`. A test imports and validates `validateEmailFormat()` from the same file. Is this aligned?",
+          "options": [
+            "Yes, it's in the same file so it's aligned",
+            "No, validateEmailFormat is not in the interface definition",
+            "Yes, email validation is implied by send_email",
+            "No, but only if validateEmailFormat is private"
+          ],
+          "correctAnswer": 1,
+          "explanation": "Tests should only reference functions explicitly listed in the interface. Even though validateEmailFormat is in the same file, it's not part of the defined interface and shouldn't be tested directly."
+        },
+        {
+          "id": "q2",
+          "type": "multiple-choice",
+          "question": "What should tests assert according to interface alignment principles?",
+          "options": [
+            "Internal implementation details for thoroughness",
+            "Observable outcomes matching defined inputs and outputs",
+            "Code style and formatting standards",
+            "Performance benchmarks and optimization"
+          ],
+          "correctAnswer": 1,
+          "explanation": "Tests should assert observable outcomes (return values, side effects) that match the defined inputs and expected outputs in the interface, not internal details or non-functional requirements."
+        },
+        {
+          "id": "q3",
+          "type": "multiple-choice",
+          "question": "The interface specifies function signature `parse_config(file_path: str) -> dict`. Tests verify the function also sets a module-level `last_parsed_time` variable. How should this be classified?",
+          "options": [
+            "Aligned - time tracking is reasonable",
+            "Misaligned - last_parsed_time is not in the interface",
+            "Aligned - it's testing a side effect",
+            "Misaligned - only if last_parsed_time is private"
+          ],
+          "correctAnswer": 1,
+          "explanation": "This is misaligned because last_parsed_time is not part of the defined interface. Tests should only validate what's explicitly specified in the interface definition."
+        }
+      ],
+      "codingExercises": []
+    },
+    {
+      "id": "lesson-4",
+      "title": "Implementation-Agnostic Testing",
+      "content": "# Implementation-Agnostic Testing\n\n## The Core Question\n\nWhen reviewing tests, always ask:\n\n**\"Would any correct implementation that satisfies the interface and requirements pass these tests?\"**\n\nIf the answer is \"no,\" the tests are implementation-specific and unfair.\n\n## Characteristics of Fair Tests\n\n### ✅ Fair Tests:\n1. **Assert observable outcomes**\n   - Final return values\n   - HTTP responses\n   - File outputs\n   - Database states\n   - Side effects described in requirements\n\n2. **Allow multiple valid implementations**\n   - Don't mandate specific algorithms\n   - Don't require particular data structures\n   - Don't enforce coding style\n   - Don't dictate control flow\n\n3. **Avoid internal details**\n   - No checks on private helpers\n   - No specific method call order\n   - No data structure internals\n   - No hardcoded strings not in requirements\n\n4. **Reflect documented behavior**\n   - Test what the issue describes\n   - Validate API contracts\n   - Check error conditions mentioned in requirements\n\n### ❌ Unfair Tests:\n1. **Assert implementation details**\n   - Exact error messages not in requirements\n   - Specific variable names\n   - Internal state of objects\n   - Memory layout or data structure choices\n\n2. **Require specific approaches**\n   - Must use recursion vs. iteration\n   - Must use specific sorting algorithm\n   - Must call helpers in specific order\n   - Must use particular regex patterns\n\n3. **Check unrelated behavior**\n   - Import unrelated modules\n   - Validate formatting not in requirements\n   - Assert on debug logging\n   - Check internal caching mechanisms\n\n## Example Scenarios\n\n### Scenario 1: String Processing\n**Requirement**: Function should remove whitespace from input\n\n✅ **Fair**: `assert process(\" hello \") == \"hello\"`\n❌ **Unfair**: `assert \" \".join not in process.__code__.co_names` (enforces implementation)\n\n### Scenario 2: Error Handling\n**Requirement**: Return 404 if resource not found\n\n✅ **Fair**: `assert response.status_code == 404`\n❌ **Unfair**: `assert \"Resource not found in database\" in response.text` (unless exact message is in requirements)\n\n### Scenario 3: Data Processing\n**Requirement**: Function returns sorted list of results\n\n✅ **Fair**: `assert result == [1, 2, 3, 4]`\n❌ **Unfair**: `assert isinstance(result, QuickSort)` (enforces algorithm)",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "multiple-choice",
+          "question": "A requirement states 'function returns list of users sorted by name'. Which test is implementation-agnostic?",
+          "options": [
+            "assert users[0].name < users[1].name and uses sorted() builtin",
+            "assert [u.name for u in users] == ['Alice', 'Bob', 'Charlie']",
+            "assert quicksort_algorithm_used == True",
+            "assert 'sorted' in get_users.__code__.co_names"
+          ],
+          "correctAnswer": 1,
+          "explanation": "Testing the actual sorted output validates the observable outcome without constraining how the sorting is implemented. Options 1, 3, and 4 all enforce specific implementation approaches."
+        },
+        {
+          "id": "q2",
+          "type": "multiple-choice",
+          "question": "Requirements specify 'return error code 400 for invalid input'. Which test is fair?",
+          "options": [
+            "assert response.status_code == 400 and response.json['error'] == 'Invalid input'",
+            "assert response.status_code == 400",
+            "assert validate_input() was called before processing",
+            "assert error logged to file includes traceback"
+          ],
+          "correctAnswer": 1,
+          "explanation": "Testing only the status code (option 2) validates the documented behavior. Option 1 adds message requirements not specified. Options 3 and 4 check implementation details."
+        },
+        {
+          "id": "q3",
+          "type": "multiple-choice",
+          "question": "Which of these is an implementation detail that should NOT be tested?",
+          "options": [
+            "The return value of a public API function",
+            "Whether an internal helper method is called",
+            "The HTTP status code returned by an endpoint",
+            "The contents of a file after a write operation"
+          ],
+          "correctAnswer": 1,
+          "explanation": "Internal helper method calls are implementation details. The other options are observable outcomes that should be tested."
+        }
+      ],
+      "codingExercises": []
+    },
+    {
+      "id": "lesson-5",
+      "title": "Identifying Out-of-Scope Behavior",
+      "content": "# Identifying Out-of-Scope Behavior\n\n## What is Out-of-Scope?\n\n**Out-of-scope behavior** occurs when tests verify functionality, edge cases, or requirements that are:\n- Not described in the issue\n- Not mentioned in the interface\n- Not implied by the requirements\n- Added by the test author's assumptions\n\n## Key Questions to Ask\n\n### 1. New Functionality or Edge Cases?\n\"Does the test introduce **new functionality or edge cases** not described in the issue or interface?\"\n\n**Example**: Issue says \"validate email format\", but test checks for:\n- Disposable email detection\n- MX record verification\n- Spam domain blocking\n\nUnless these are documented requirements, they're out of scope.\n\n### 2. Formatting or Extra Fields?\n\"Are there checks for **formatting, performance, or extra fields** not in the requirements?\"\n\n**Example**: Issue requests JSON response with `user_id` and `email`, but test validates:\n- Response time < 100ms\n- Pretty-printed JSON format\n- Additional `created_at` field\n\nPerformance and extra fields are out of scope unless specified.\n\n### 3. Environment Assumptions?\n\"Are **environment assumptions** (OS, timeouts, API tokens) documented anywhere?\"\n\n**Example**: Tests fail if:\n- Not running on Linux\n- Request takes > 5 seconds\n- Specific API key not present\n\nThese create unfair evaluation unless explicitly documented in requirements.\n\n## Red Flags for Out-of-Scope Tests\n\n### 🚩 Undocumented Edge Cases\n```python\n# Requirement: Parse CSV file\ndef test_parse_csv():\n    # This is in scope:\n    assert parse_csv('data.csv') == expected_data\n    \n    # These are out of scope (unless documented):\n    assert parse_csv('data.csv', encoding='utf-16') works\n    assert parse_csv('malformed.csv') raises SpecificError\n    assert parse_csv('huge.csv') completes in < 1 second\n```\n\n### 🚩 Feature Creep\n```javascript\n// Requirement: Add user authentication\ntest('authentication', () => {\n  // This is in scope:\n  expect(login(user, pass)).toBe(true);\n  \n  // These are out of scope (unless documented):\n  expect(trackLoginAttempts()).toHaveBeenCalled();\n  expect(sendWelcomeEmail()).toHaveBeenCalled();\n  expect(updateLastLoginTime()).toHaveBeenCalled();\n});\n```\n\n### 🚩 Unstated Requirements\n```go\n// Requirement: Calculate tax amount\nfunc TestCalculateTax(t *testing.T) {\n    // This is in scope:\n    result := CalculateTax(100.0, 0.08)\n    assert.Equal(t, 8.0, result)\n    \n    // These are out of scope (unless documented):\n    assert.True(t, result > 0) // Assumes tax is always positive\n    assert.Equal(t, 2, decimalPlaces(result)) // Assumes precision\n    assert.NoError(t, validateTaxRate(0.08)) // Assumes validation\n}\n```\n\n## Impact of Out-of-Scope Tests\n\nOut-of-scope tests create **unfair evaluation** because:\n1. Valid solutions that meet stated requirements will fail\n2. AI models can't learn undocumented expectations\n3. Different implementers make different assumptions\n4. Benchmark results don't reflect real-world task success",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "multiple-choice",
+          "question": "An issue requests 'add search functionality to find users by name'. Tests also verify search by email, phone, and fuzzy matching. What's the problem?",
+          "options": [
+            "No problem - comprehensive testing is good",
+            "Out of scope - these search modes aren't in requirements",
+            "Implementation-specific - it constrains the algorithm",
+            "Misaligned - the interface must be wrong"
+          ],
+          "correctAnswer": 1,
+          "explanation": "These additional search capabilities are out of scope because they're not mentioned in the issue requirements. Tests should only validate what's documented."
+        },
+        {
+          "id": "q2",
+          "type": "multiple-choice",
+          "question": "Requirements say 'parse JSON configuration file'. Tests verify the parser handles comments in JSON (non-standard). Is this fair?",
+          "options": [
+            "Fair - comments are a useful feature",
+            "Unfair - only if comments aren't in the issue",
+            "Fair - it's reasonable to expect robust parsing",
+            "Unfair - it's implementation-specific"
+          ],
+          "correctAnswer": 1,
+          "explanation": "Comment handling in JSON is out of scope unless explicitly mentioned in requirements. It's an undocumented feature that would cause valid standard JSON parsers to fail."
+        },
+        {
+          "id": "q3",
+          "type": "multiple-choice",
+          "question": "Tests assume the system runs on Linux and fail on Windows/Mac. Requirements don't mention OS. What should you do?",
+          "options": [
+            "Accept it - Linux is standard for servers",
+            "Flag as out of scope - environment assumptions undocumented",
+            "Update requirements to specify Linux",
+            "Ignore it - OS doesn't affect functionality"
+          ],
+          "correctAnswer": 1,
+          "explanation": "Environment assumptions must be documented in requirements. If tests make OS assumptions not stated in requirements, they're introducing out-of-scope constraints."
+        }
+      ],
+      "codingExercises": []
+    },
+    {
+      "id": "lesson-6",
+      "title": "Writing Effective Prompts",
+      "content": "# Writing Effective Prompts\n\n## Overview of Prompt Files\n\nYou need to edit four AI-generated files:\n\n1. **`prompt_statement.md`** - High-level, natural prompt from user perspective\n2. **`problem_statement.md`** - Extended technical details\n3. **`interface.md`** - Explicit function/class names and signatures\n4. **`requirements.json`** - Implementation specifics bridging prompt and tests\n\n## Prompt Statement Guidelines\n\n### Format Requirements\n- Written from **first-person perspective** (person experiencing the issue)\n- **Paragraph format** (not step-by-step instructions)\n- Natural language, as someone would speak to an AI assistant\n- Easy to read, no giant walls of text\n\n### What to Include\n✅ Problem description from user perspective\n✅ Observable symptoms or failures\n✅ Desired outcome or behavior\n✅ Context about what's not working\n\n### What to Exclude\n❌ Step-by-step instructions\n❌ Technical implementation details\n❌ Requests to generate tests\n❌ Requests to run tests or commands\n❌ Anything not covered by test.patch\n❌ Agentic instructions\n\n### Example: Good Prompt Statement\n\n```markdown\nThere are intermittent 500 errors and inconsistent JSON payloads \ncoming from several endpoints in apps/api. It looks like request \nvalidation or error handling is swallowing exceptions and returning \npartial data. Please dig into apps/api, reproduce the issue, trace \nthe validation/error middleware, and ship a minimal fix that \nguarantees consistent response shapes and correct error codes.\n```\n\n### Example: Bad Prompt Statement\n\n```markdown\nFollow these steps:\n1. Open src/api/handlers.py\n2. Find the validate_request function\n3. Add try-catch block\n4. Return 500 with error message\n5. Write tests for the new behavior\n6. Run: python -m pytest tests/\n7. Verify all tests pass\n```\n\n## Problem Statement Guidelines\n\n- Written in **English** (delete if non-English; will be regenerated)\n- More detailed than prompt_statement\n- Can include implementation specifics\n- Must align with test.patch scope\n- Include behaviors tested but not in original issue\n- Exclude behaviors in issue but not tested\n\n## Interface Definition\n\n- Explicitly define **names** needed by tests\n- List functions, classes, file paths\n- Include signatures (inputs/outputs)\n- Say \"NO INTERFACES NEEDED\" if nothing new introduced\n- Only include items first introduced in golden.patch\n\n## Requirements JSON\n\n- Contains testable implementation specifics\n- Bridges gap between prompt and tests\n- Must align with all other files\n- Does not replace interface.md",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "multiple-choice",
+          "question": "Which prompt_statement.md is correctly formatted?",
+          "options": [
+            "Step 1: Open file.py Step 2: Add function Step 3: Run tests",
+            "I'm seeing 404 errors when users try to access archived posts. The links work for active posts but break after archiving. Can you fix the URL routing to handle archived content?",
+            "Please implement error handling, write unit tests, and update documentation for the API module.",
+            "Run these commands: npm install, npm test, git commit"
+          ],
+          "correctAnswer": 1,
+          "explanation": "Option 2 is correct: it's written from first-person perspective, describes the problem naturally, and focuses on the issue without giving step-by-step instructions or requesting test generation."
+        },
+        {
+          "id": "q2",
+          "type": "multiple-choice",
+          "question": "The original issue is written in Chinese. What should you do with problem_statement.md?",
+          "options": [
+            "Translate it to English manually",
+            "Leave it in Chinese for authenticity",
+            "Delete the file - it will be regenerated in English",
+            "Use a combination of Chinese and English"
+          ],
+          "correctAnswer": 2,
+          "explanation": "For non-English issues, you should delete problem_statement.md entirely. The CI pipeline will automatically regenerate an English version."
+        },
+        {
+          "id": "q3",
+          "type": "multiple-choice",
+          "question": "What belongs in the interface.md file?",
+          "options": [
+            "Step-by-step instructions for implementation",
+            "Function names, signatures, and file paths introduced in golden.patch",
+            "Error messages and log formats",
+            "Test cases and validation criteria"
+          ],
+          "correctAnswer": 1,
+          "explanation": "interface.md should explicitly define function names, class names, signatures (inputs/outputs), and file paths for items first introduced in the golden.patch and needed by test.patch."
+        }
+      ],
+      "codingExercises": []
+    },
+    {
+      "id": "lesson-7",
+      "title": "Task Review Process and Checklist",
+      "content": "# Task Review Process and Checklist\n\n## Review Lifecycle\n\n### Step 1 — Writer: Preparation\n- Re-review Prompt-Writing and Fairness guidelines\n- Ensure high-quality submission\n- Self-check using reviewer checklist\n\n### Step 2 — Writer: Submit for Review\n- Add **`Awaiting Review`** milestone\n- No other action needed\n\n### Step 3 — Reviewer: Assign & Begin\n- Search for PRs with **`Awaiting Review`** milestone\n- Prioritize by creation date (oldest first)\n- Change milestone to **`Reviewing`**\n- Self-assign as reviewer\n- Click \"Start Review\"\n\n### Step 4 — Reviewer: Conduct Review\n- Provide constructive feedback\n- Note what was done well\n- Specify what needs improvement\n- Change milestone to:\n  - **`Needs Revision`** - if changes required\n  - **`Approved`** - if ready to merge\n\n### Step 5 — Writer: Revise or Complete\n- **If `Needs Revision`**: Make changes and return to Step 2\n- **If `Approved`**: No further action needed\n\n## Reviewer Checklist\n\n### ❌ No Rubrics\n- Rubrics and rubric.json are deprecated\n- Do not create or review rubric.json\n- Judge by: tests (pre: FAIL, post: PASS), fairness, prompts, environment\n\n### 📝 prompt_statement.md\n- [ ] No giant paragraphs - easy to read\n- [ ] No step-by-step directions\n- [ ] Every aspect is tested by test.patch\n- [ ] Written from user perspective\n- [ ] No requests for test generation or running commands\n\n### 🔌 interface.md\n- [ ] Defines all names/functions/classes needed by test.patch\n- [ ] Only includes items first introduced in golden.patch\n- [ ] Says \"NO INTERFACES NEEDED\" if nothing new\n\n### 📄 problem_statement.md\n- [ ] Written in English\n- [ ] Provides extended details beyond prompt\n- [ ] Can contain implementation details\n- [ ] Scoped to align with prompt, interface, requirements, and tests\n- [ ] Includes behavior tested but not in original issue\n- [ ] Excludes behavior not tested\n\n### 📋 requirements.json\n- [ ] Contains implementation specifics\n- [ ] Bridges gap between prompt and tests\n- [ ] Does not replace interface.md\n- [ ] Aligns with other prompt files and test.patch\n\n### ⚖️ Fairness and Scope\n- [ ] Outcome-based assertions only (no implementation details)\n- [ ] No out-of-scope checks beyond issue/PR and interface\n- [ ] Multiple valid implementations should pass\n- [ ] Apply fairness rubric (0-3 scale)\n- [ ] Flag if scored 2-3\n\n### 🐳 Dockerfile\n- [ ] Base image version pinned to match expected language version\n- [ ] No unnecessary dependencies\n- [ ] COPY commands unchanged (repo/, problem_statement.md, etc.)\n- [ ] WORKDIR /workspace/repo unchanged\n\n### 🧪 test_metadata.json\n- [ ] Runs tests from test.patch\n- [ ] Command is deterministic and non-interactive\n- [ ] Produces machine-readable output for parsing",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "multiple-choice",
+          "question": "A writer submits a PR with 'Awaiting Review' milestone. As a reviewer, what's your first step?",
+          "options": [
+            "Immediately approve if it looks good at first glance",
+            "Change milestone to 'Reviewing' and assign yourself",
+            "Request changes without reviewing",
+            "Merge if tests pass"
+          ],
+          "correctAnswer": 1,
+          "explanation": "The correct first step is to change the milestone to 'Reviewing' and self-assign as reviewer before conducting the review. This prevents duplicate review efforts."
+        },
+        {
+          "id": "q2",
+          "type": "multiple-choice",
+          "question": "You find a task with a rubric.json file. What should you do?",
+          "options": [
+            "Carefully review the rubric for accuracy",
+            "Update the rubric to match current standards",
+            "Note that rubrics are deprecated and should not be used",
+            "Create a better version of the rubric"
+          ],
+          "correctAnswer": 2,
+          "explanation": "Rubrics and rubric.json are deprecated. You should note this and not create, edit, or review rubric files. Tasks are judged by test behavior and fairness."
+        },
+        {
+          "id": "q3",
+          "type": "multiple-choice",
+          "question": "Which of these Dockerfile lines should NEVER be altered?",
+          "options": [
+            "FROM python:3.9",
+            "RUN pip install pytest",
+            "COPY repo/ /workspace/repo/",
+            "ENV PATH=/usr/local/bin:$PATH"
+          ],
+          "correctAnswer": 2,
+          "explanation": "COPY commands for repo/, verifiers/, golden.patch, and problem_statement.md should never be altered. The base image, dependencies, and environment variables can be adjusted as needed."
+        }
+      ],
+      "codingExercises": []
+    },
+    {
+      "id": "lesson-8",
+      "title": "Debugging and Common Issues",
+      "content": "# Debugging and Common Issues\n\n## Validation Failure Scenarios\n\n### Pre-Patch: FAIL - Post-Patch: FAIL ✅ Expected\n**What it means**: Tests fail both before and after applying the golden patch.\n\n**Action**:\n1. Review error logs to identify root cause\n2. Likely need to update Dockerfile or test_metadata.json\n3. Common causes:\n   - Missing dependencies\n   - Wrong language version\n   - Incorrect test command\n   - Environment configuration issues\n4. Iterate by running build command again\n5. Goal: Achieve Pre-Patch: FAIL → Post-Patch: PASS\n\n### Pre-Patch: PASS - Post-Patch: PASS ❌ Problem\n**What it means**: Tests pass even without the fix.\n\n**Action**:\n1. Tests are too weak or missing coverage\n2. Check repo's tests/ folder for relevant tests\n3. Copy appropriate test files to verifiers/\n4. Rebuild until you get FAIL → PASS pattern\n\n### Pre-Patch: FAIL - Post-Patch: PASS ✅ Success!\n**What it means**: Perfect! Tests fail before fix, pass after.\n\n**Action**:\n1. Finalize prompt files:\n   - prompt_statement.md\n   - problem_statement.md  \n   - interface.md\n   - requirements.json\n2. Submit for review\n\n### Pre-Patch: PASS - Post-Patch: FAIL ❌ Problem\n**What it means**: Tests pass before fix but fail after.\n\n**Action**:\n1. Check if golden.patch removes tests instead of adding them\n   - If so, flag this task and start a new one\n2. If not:\n   - Tests may be checking wrong behavior\n   - Check tests/ folder for relevant tests\n   - Remove irrelevant failing tests\n   - Add missing relevant tests from repo\n\n## Common Environment Issues\n\n### Windows Development\n**Issue**: Path separators and environment differences\n\n**Solution**: Use WSL (Windows Subsystem for Linux)\n- Provides Unix-like environment\n- Matches Linux/macOS development environments\n- Resolves path separator issues (backslash vs forward slash)\n\n### Linux Development  \n**Issue**: Workpuls/Insightful AppImage inactive on Wayland\n\n**Solution**: Switch to X11\n```bash\necho $XDG_SESSION_TYPE  # Check session type\n# If wayland, log out and select \"Xorg\" at login screen\n```\n\n## Language-Specific Issues\n\n### Go Projects\n\n**Issue**: go.mod requires newer Go version\n```\nSolution: Update Dockerfile\nFROM golang:1.22  # Match required version\n```\n\n**Issue**: Pre-modules project needs GOPATH\n```\nSolution: Set environment variable\nENV GO111MODULE=off\n```\n\n**Issue**: Need Delve debugger\n```dockerfile\nRUN go install github.com/go-delve/delve/cmd/dlv@latest\nRUN ln -sf \"$GOPATH/bin/dlv\" /usr/local/bin/dlv\n```\n\n### TypeScript/JavaScript\n\n**Issue**: Pre-patch test hangs forever\n```\nSolution: Disable watch mode\nAdd --watchAll=false to test command\n```\n\n**Issue**: workspace: protocol in package.json\n```dockerfile\nRUN npm install -g pnpm@latest\nRUN pnpm install --frozen-lockfile || pnpm install || true\n```\n\n### Python\n\n**Issue**: externally-managed-environment error\n```dockerfile\nSolution: Use break-system-packages flag\nRUN pip3 install --break-system-packages pytest\n```\n\n### C++\n\n**Issue**: No standard build structure\n\n**Solution**: Use bespoke framework\n```json\n{\n  \"test_framework\": \"bespoke\",\n  \"test_command\": \"/workspace/repo/build/bin/test_binary\",\n  \"validation_code_snippet\": \"result = {};result['yes'] = 'PASSED' if output.find('tests: ok') != -1 else 'FAILED'\"\n}\n```\n\n## Debugging Workflow\n\n1. **Build the image**:\n   ```bash\n   python tooling/build.py --task-name TASK_NAME\n   ```\n\n2. **Run pre-patch tests manually**:\n   ```bash\n   docker run --rm x86-OWNER-REPO-ISSUE bash -lc \"cd /workspace && YOUR_TEST_COMMAND\"\n   ```\n\n3. **Run post-patch tests manually**:\n   ```bash\n   docker run --rm x86-OWNER-REPO-ISSUE bash -lc \"cd /workspace/repo && git apply /workspace/golden.patch && cd /workspace && YOUR_TEST_COMMAND\"\n   ```\n\n4. **Iterate**: Adjust Dockerfile and test_metadata.json as needed\n\n5. **Never modify**: test files or repository code directly",
+      "questions": [
+        {
+          "id": "q1",
+          "type": "multiple-choice",
+          "question": "You run build.py and get 'Pre-Patch: PASS, Post-Patch: PASS'. What's the most likely issue?",
+          "options": [
+            "The golden.patch is incorrect",
+            "Tests are too weak or missing coverage of the fix",
+            "The Dockerfile has wrong dependencies",
+            "The test_metadata.json command is wrong"
+          ],
+          "correctAnswer": 1,
+          "explanation": "When both pre and post-patch pass, the tests aren't actually validating the fix. You need to add or strengthen tests to cover the behavior being fixed."
+        },
+        {
+          "id": "q2",
+          "type": "multiple-choice",
+          "question": "A Go project fails with 'go.mod requires go >= 1.22' but Dockerfile uses golang:1.21. What should you do?",
+          "options": [
+            "Modify go.mod to require 1.21",
+            "Update Dockerfile to use golang:1.22",
+            "Add GO111MODULE=off environment variable",
+            "Remove the go.mod file"
+          ],
+          "correctAnswer": 1,
+          "explanation": "The Dockerfile should be updated to match the version required by the project. Never modify project files like go.mod."
+        },
+        {
+          "id": "q3",
+          "type": "multiple-choice",
+          "question": "Tests hang forever in a TypeScript project using Jest. What's the likely cause and solution?",
+          "options": [
+            "Missing dependencies - run npm install",
+            "Wrong test framework - switch to vitest",
+            "Watch mode is enabled - add --watchAll=false",
+            "Node version mismatch - update Dockerfile"
+          ],
+          "correctAnswer": 2,
+          "explanation": "Hanging tests in Jest are commonly caused by watch mode. Adding --watchAll=false to the test command disables watch mode for non-interactive test runs."
+        }
+      ],
+      "codingExercises": [
+        {
+          "id": "code1",
+          "title": "Fix Docker Environment for Go Project",
+          "description": "A Go project requires Go 1.22 and the Delve debugger. Update the Dockerfile to meet these requirements.\n\nYour Dockerfile should:\n1. Use the correct Go version\n2. Install Delve debugger\n3. Symlink dlv to PATH",
+          "starterCode": "FROM golang:1.21\n\nWORKDIR /workspace\n\n# Add your changes below",
+          "language": "dockerfile",
+          "testCases": [
+            {
+              "input": "Dockerfile content",
+              "expectedOutput": "Should use golang:1.22 base image, install delve, and create symlink"
+            }
+          ],
+          "solution": "FROM golang:1.22\n\nWORKDIR /workspace\n\nRUN go install github.com/go-delve/delve/cmd/dlv@latest\nRUN ln -sf \"$GOPATH/bin/dlv\" /usr/local/bin/dlv"
+        },
+        {
+          "id": "code2",
+          "title": "Create Bespoke Test Validation for C++",
+          "description": "A C++ project outputs 'All tests passed: 15/15' on success. Create a validation_code_snippet for test_metadata.json that checks for this string.\n\nThe snippet should:\n1. Search for the success pattern in output\n2. Set result['status'] to 'PASSED' if found, 'FAILED' otherwise\n3. Be a single-line Python expression (use semicolons)",
+          "starterCode": "// Write your validation code snippet\n// Available variable: output (string)\n// Must set: result (dictionary)\n",
+          "language": "python",
+          "testCases": [
+            {
+              "input": "output = 'All tests passed: 15/15'",
+              "expectedOutput": "result['status'] = 'PASSED'"
+            },
+            {
+              "input": "output = 'Tests failed: 12/15 passed'",
+              "expectedOutput": "result['status'] = 'FAILED'"
+            }
+          ],
+          "solution": "result = {}; result['status'] = 'PASSED' if 'All tests passed:' in output and '/15' in output else 'FAILED'"
+        }
+      ]
+    }
+  ]
+}
+```

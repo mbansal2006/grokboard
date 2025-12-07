@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.env
+.env.local
+uploads/*
+courses/*
+exports/*
+debug-*.txt
+debug-*.json
+test-*.txt
+test-*.json
+test-write-dir
+.git
+.gitignore
+README.md

@@ -1,0 +1,28 @@
+{
+  "name": "mercorboard-course-builder",
+  "version": "1.0.0",
+  "description": "Interactive course builder from markdown files using Grok AI",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "install-all": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "keywords": [
+    "course",
+    "education",
+    "markdown",
+    "grok"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "firebase": "^12.6.0",
+    "fly": "^4.6.16"
+  }
+}

@@ -1,0 +1,19 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        # VITE_API_URL must be set in AWS Amplify Console:
+        # App settings → Environment variables → Add VITE_API_URL
+        - echo "Building with VITE_API_URL=${VITE_API_URL:-not-set}"
+        - npm run build
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
